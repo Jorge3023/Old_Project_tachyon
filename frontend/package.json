@@ -1,7 +1,6 @@
 {
   "name": "produccion-app",
   "private": true,
-  "homepage": "http:/example.github.io/proyecto",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

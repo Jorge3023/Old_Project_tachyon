@@ -4,26 +4,28 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timedelta
 from typing import Optional, List
-import jwt, bcrypt, sqlite3, json, os, io
+import jwt, bcrypt, sqlite3, json, os, io, secrets, warnings
 from excel_parser import procesar_excel
 
 app = FastAPI(title="ProduccionApp API")
 
-# --- MODIFICACIÓN AQUÍ ---
+# Orígenes permitidos: define ORIGENES_PERMITIDOS (separados por comas) en el servidor.
+ORIGENES = [o.strip() for o in os.getenv("ORIGENES_PERMITIDOS", "http://localhost:5173").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Cambiado de localhost a "*" para permitir Render
-    allow_credentials=True, 
-    allow_methods=["*"], 
+    allow_origins=ORIGENES,
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"]
 )
 
 @app.get("/")
 def read_root():
-    return {"estado": "En línea", "mensaje": "API de ProduccionApp funcionando correctamente en Render"}
-# -------------------------
+    return {"estado": "En línea"}
 
-SECRET_KEY = "REDACTADO"
+# La clave que firma las sesiones se lee del entorno. Si falta, se genera una al azar en cada arranque
+# (las sesiones se cierran al reiniciar), nunca una clave fija escrita en el código.
+SECRET_KEY = os.getenv("SECRET_KEY") or secrets.token_urlsafe(48)
 ALGORITHM  = "HS256"
 TOKEN_HOURS = 8
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -48,17 +50,15 @@ def init_db():
         subido_por INTEGER, subido_en TEXT DEFAULT CURRENT_TIMESTAMP,
         reporte_json TEXT, resumen_json TEXT)""")
 
-    # Usuarios por defecto
-    usuarios_default = [
-        ("Administrador",  "admin@empresa.com",      "REDACTADO",      "admin"),
-        ("Juan López",     "jlopez@empresa.com",     "REDACTADO", "admin"),
-        ("María Rodríguez","mrodriguez@empresa.com", "REDACTADO",   "operador"),
-        ("Carlos Méndez",  "cmendez@empresa.com",    "REDACTADO",   "operador"),
-    ]
-    for nombre, correo, pw, rol in usuarios_default:
-        ph = bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
-        cur.execute("INSERT OR IGNORE INTO usuarios (nombre,correo,password_hash,rol) VALUES (?,?,?,?)",
-                    (nombre, correo, ph, rol))
+    # No hay cuentas por defecto. Para crear el administrador inicial define ADMIN_EMAIL y ADMIN_PASSWORD (mín. 8).
+    correo, pw = os.getenv("ADMIN_EMAIL"), os.getenv("ADMIN_PASSWORD")
+    if correo and pw:
+        if len(pw) < 8:
+            warnings.warn("ADMIN_PASSWORD tiene menos de 8 caracteres: no se creó el administrador.")
+        else:
+            ph = bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
+            cur.execute("INSERT OR IGNORE INTO usuarios (nombre,correo,password_hash,rol) VALUES (?,?,?,?)",
+                        ("Administrador", correo.strip().lower(), ph, "admin"))
     conn.commit(); conn.close()
 
 # ── Auth ───────────────────────────────────────────────────────────────────────

@@ -80,13 +80,6 @@ export default function Login() {
         <p className="text-center text-xs text-gray-400 mt-6">
           Acceso restringido — solo personal autorizado
         </p>
-
-        {/* Hint de credenciales para desarrollo */}
-        <div className="mt-4 p-3 bg-brand-50 rounded-lg text-xs text-brand-700 space-y-1">
-          <p className="font-medium">Cuentas de prueba:</p>
-          <p>admin@empresa.com / REDACTADO</p>
-          <p>jlopez@empresa.com / REDACTADO</p>
-        </div>
       </div>
     </div>
   )

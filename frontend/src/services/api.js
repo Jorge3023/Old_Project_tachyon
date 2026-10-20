@@ -1,12 +1,10 @@
 import axios from 'axios'
 
-// --- MODIFICACIÓN AQUÍ ---
 const api = axios.create({
-  // Vite inyectará aquí tu URL de Render (ej. https://servidor.example.com)
-  baseURL: import.meta.env.VITE_API_URL, 
+  // URL del backend: se define con VITE_API_URL al compilar.
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 30000,
 })
-// -------------------------
 
 api.interceptors.response.use(
   res => res,

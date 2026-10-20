@@ -1,3 +1,6 @@
+> **Versión archivada.** Este repositorio conserva la primera versión del proyecto (monitoreo de líneas de producción). Ya no se mantiene.
+> No incluye cuentas de prueba: para ejecutarlo define `ADMIN_EMAIL`, `ADMIN_PASSWORD` (mín. 8 caracteres) y `SECRET_KEY` como variables de entorno, y `ORIGENES_PERMITIDOS` con la URL del frontend.
+
 # Project_Tachyon
 
 Aplicación web para monitoreo y gestión de líneas de producción.
